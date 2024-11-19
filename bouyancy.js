@@ -6,11 +6,12 @@
  *
  */
 
-const PRES_ATM = 0.0;
+const PRES_SURFACE = 101.0e3; // arbitrary
 const GRAVITY_ACC = 9.82;
-//const ATMOSPHERE_RHO = 1.225;
+const ATMOSPHERE_RHO = 1.225;
 const SEAWATER_RHO = 1025.0;
-const WOOD_RHO = 650.0;
+const OAK_RHO = 700.0;
+const REDWOOD_RHO = 450.0;
 const BALSA_RHO = 150.0;
 
 let WAVE_LAMBDA = 10.0;
@@ -31,18 +32,20 @@ function stokes_omega(k, a) {
     return c / k;
 }
 
-// TODO: regularize the CB calcs by introducing a pressure gradient also in the atmosphere
-
 function perturbed_pressure(x, y, k, a, omega, t) {
     // Express the pressure in the (x,y) plane given the pertubed sea surface by the Stokes wave.
     // Not an exact expression but good enough for a nice looking animation.
     // Ignore the atmospheric pressure, let it be zero for simplicity.
     const theta = k * x - omega * t;
     const eta = a * stokes_3rd(k * a, theta);
-    if (y >= eta) return 0.0 + PRES_ATM;
+    if (y >= eta) {
+        const h = y - eta;
+        const eff_h = y - eta * Math.exp(-k * h);
+        return -1 * eff_h * ATMOSPHERE_RHO * GRAVITY_ACC + PRES_SURFACE;
+    }
     const h = eta - y;
     const eff_h = eta * Math.exp(-k * h) - y;
-    return eff_h * SEAWATER_RHO * GRAVITY_ACC + PRES_ATM;
+    return eff_h * SEAWATER_RHO * GRAVITY_ACC + PRES_SURFACE;
 }
 
 function draw_stokes_wave(t, k, a, ctx, xmin, xmax, npts) {
@@ -119,7 +122,7 @@ function single_line_integral(ax, ay, bx, by, nodes, weights, pres_params) {
         P += wdlp_;
         PX += wdlp_ * x_;
         PY += wdlp_ * y_;
-        WL += wdl_ * (p_ > PRES_ATM ? 1.0 : 0.0); // wet perimeter
+        WL += wdl_ * (p_ > PRES_SURFACE ? 1.0 : 0.0); // wet perimeter
     }
     return [A, AX, AY, AXX, AYY, L, P * nxhat, P * nyhat, PX * nyhat, PY * nxhat, WL];
 }
@@ -159,7 +162,7 @@ function createQuadrilateralObject() {
         qly: [-0.5, -0.5, 0.5, 0.5],
 
         // uniform density of material
-        rho: WOOD_RHO,
+        rho: REDWOOD_RHO,
 
         area: 0.0, // cross section area
         perimeter: 0.0,
@@ -186,11 +189,11 @@ function createQuadrilateralObject() {
         nuz: 5000.00,
 
         // angular and linear velocities
-        omegaz: 1.00,
-        vx: 0.10,
-        vy: 4.00,
+        omegaz: 1.55,
+        vx: -0.10,
+        vy: 5.00,
 
-        quadrature_arrays: trapezoidal_nodes_and_weights(101),
+        quadrature_arrays: trapezoidal_nodes_and_weights(100),
 
         update_mechanics: function (time, pres_params) {
             const line_integrals = ql_quadrature(this.qlx,

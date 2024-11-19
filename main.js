@@ -119,7 +119,12 @@ function keyDownEvent(e) {
     }
 
     if (key == 'm' || key == 'M') { // swap type of wood
-        floater.rho = floater.rho == WOOD_RHO ? BALSA_RHO : WOOD_RHO;
+        if (floater.rho == BALSA_RHO)
+            floater.rho = REDWOOD_RHO;
+        else if (floater.rho == REDWOOD_RHO)
+            floater.rho = OAK_RHO;
+        else if (floater.rho == OAK_RHO)
+            floater.rho = BALSA_RHO;
         return;
     }
 
