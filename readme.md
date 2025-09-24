@@ -1,6 +1,6 @@
 # quadrille
 
-Interactive display of 2D plane in the browser that can be used fo various projects. Use arrows to translate the view and use shift+up/down to zoom the view.
+Interactive display of a gridded 2D plane in the browser, useful for basic animation projects. Use arrows to translate the view and use shift+up/down to zoom the view.
 
 Comes with a fun bouyancy demo animation (see code for interaction options).
 
