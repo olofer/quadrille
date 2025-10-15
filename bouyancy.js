@@ -6,6 +6,19 @@
  *
  */
 
+// TODO: this set of codes should be packaged in a namespace-like object & expose a set of callbacks
+//       which include, init, draw, evove, draw_stats, handle_keypress, and such...
+
+/*
+const MyNamespace = {
+  myFunction: () => console.log("Hello!"),
+  myVariable: 42
+};
+
+MyNamespace.myFunction(); // Output: Hello!
+console.log(MyNamespace.myVariable); // Output: 42
+*/
+
 const PRES_SURFACE = 101.0e3; // arbitrary
 const GRAVITY_ACC = 9.82;
 const ATMOSPHERE_RHO = 1.225;
