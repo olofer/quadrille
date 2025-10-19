@@ -11,7 +11,7 @@ TODO: ability to change wave amp and wavelength (with safeguards)
 
 BouyancyDemo.init()
 
-let floater = createQuadrilateralObject();
+let floater = createQuadrilateralObject(BouyancyDemo);
 floater.update_mechanics(0.0, [BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A, BouyancyDemo.stokes_omega(BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A), 0.0]);
 
 console.log(floater);
@@ -65,13 +65,13 @@ function reset_state() {
 
 function refresh() {
 
-    var currentTime = Date.now();
-    var elapsedTime = currentTime - startTime;
+    let currentTime = Date.now();
+    let elapsedTime = currentTime - startTime;
     startTime = currentTime;
 
     if (elapsedTime == 0.0) return;
 
-    var elapsedSec = elapsedTime / 1000.0;
+    let elapsedSec = elapsedTime / 1000.0;
 
     while (elapsedSec > 0.0) {
 
@@ -90,7 +90,8 @@ function refresh() {
     PV.setTransform(ctx);
 
     BouyancyDemo.draw_stokes_wave(tsim, BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A, ctx, PV.xmin, PV.xmax, BouyancyDemo.WAVE_PTS);
-    drawQuadrilateralObject(floater, ctx);
+    //drawQuadrilateralObject(floater, ctx);
+    floater.draw(ctx);
 
     PV.unitTransform(ctx);
     filtered_fpsval = filter_beta * filtered_fpsval + (1.0 - filter_beta) * (1000.0 / elapsedTime);
@@ -101,8 +102,8 @@ function refresh() {
 }
 
 function keyDownEvent(e) {
-    var code = e.keyCode;
-    var key = e.key;
+    let code = e.keyCode;
+    let key = e.key;
 
     if (key == 'r' || key == 'R') {
         reset_state();
@@ -197,8 +198,8 @@ function keyDownEvent(e) {
 }
 
 function keyUpEvent(e) {
-    var code = e.keyCode;
-    var key = e.key;
+    let code = e.keyCode;
+    let key = e.key;
 }
 
 resizeWindow();
