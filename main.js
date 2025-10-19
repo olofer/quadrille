@@ -2,14 +2,20 @@
 
 Demo of the planeview.js grid plotter with an interactive animation.
 
-TODO: add "do nothing" demo object and ability to hot-swap cycle btw loaded demos
+Hot-swap which demo is executing by pressing the tab key.
 
 Each "demo" object must have these member functions:
   init, reset, draw, evolve, print_stats, handle_key_down
 
 */
 
-BouyancyDemo.init();
+const LIST_OF_DEMOS = [BouyancyDemo, DonothingDemo];
+
+for (let i = 0; i < LIST_OF_DEMOS.length; i++) {
+    LIST_OF_DEMOS[i].init();
+}
+
+let demoIndex = 0;
 
 const DEFAULT_BBOX = [-5.0, 5.0, -3.0, 3.0];
 
@@ -40,7 +46,7 @@ function reset_state() {
     tsim = 0.0;
     frame = 0;
     startTime = Date.now();
-    BouyancyDemo.reset();
+    LIST_OF_DEMOS[demoIndex].reset();
 }
 
 function printMasterStats(ctx, timestamp, fpsval) {
@@ -61,7 +67,7 @@ function refresh() {
 
     while (elapsedSec > 0.0) {
 
-        BouyancyDemo.evolve(tsim, dt);
+        LIST_OF_DEMOS[demoIndex].evolve(tsim, dt);
 
         tsim += dt;
         elapsedSec -= dt;
@@ -74,12 +80,12 @@ function refresh() {
     PV.drawGrid(ctx);
     PV.setTransform(ctx);
 
-    BouyancyDemo.draw(ctx, tsim, PV.xmin, PV.xmax, PV.ymin, PV.ymax);
+    LIST_OF_DEMOS[demoIndex].draw(ctx, tsim, PV.xmin, PV.xmax, PV.ymin, PV.ymax);
 
     PV.unitTransform(ctx);
     filtered_fpsval = filter_beta * filtered_fpsval + (1.0 - filter_beta) * (1000.0 / elapsedTime);
     printMasterStats(ctx, tsim, filtered_fpsval);
-    BouyancyDemo.print_stats(ctx, tsim);
+    LIST_OF_DEMOS[demoIndex].print_stats(ctx, tsim);
     PV.setTransform(ctx);
 
     frame++;
@@ -88,6 +94,14 @@ function refresh() {
 function keyDownEvent(e) {
     let code = e.keyCode;
     let key = e.key;
+
+    if (key == "Tab") {
+        demoIndex++;
+        if (demoIndex == LIST_OF_DEMOS.length) demoIndex = 0;
+        // reset_state();
+        e.preventDefault();
+        return;
+    }
 
     if (key == 'r' || key == 'R') {
         reset_state();
@@ -147,7 +161,7 @@ function keyDownEvent(e) {
         return;
     }
 
-    BouyancyDemo.handle_key_down(e);
+    LIST_OF_DEMOS[demoIndex].handle_key_down(e);
 }
 
 function keyUpEvent(e) {
