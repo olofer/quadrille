@@ -9,72 +9,74 @@
 // TODO: this set of codes should be packaged in a namespace-like object & expose a set of callbacks
 //       which include, init, draw, evove, draw_stats, handle_keypress, and such...
 
-/*
-const MyNamespace = {
-  myFunction: () => console.log("Hello!"),
-  myVariable: 42
-};
+const BouyancyDemo = {
 
-MyNamespace.myFunction(); // Output: Hello!
-console.log(MyNamespace.myVariable); // Output: 42
-*/
+    PRES_SURFACE: 101.0e3, // arbitrary
+    GRAVITY_ACC: 9.82,
+    ATMOSPHERE_RHO: 1.225,
+    SEAWATER_RHO: 1025.0,
+    OAK_RHO: 700.0,
+    REDWOOD_RHO: 450.0,
+    BALSA_RHO: 150.0,
 
-const PRES_SURFACE = 101.0e3; // arbitrary
-const GRAVITY_ACC = 9.82;
-const ATMOSPHERE_RHO = 1.225;
-const SEAWATER_RHO = 1025.0;
-const OAK_RHO = 700.0;
-const REDWOOD_RHO = 450.0;
-const BALSA_RHO = 150.0;
+    WAVE_LAMBDA: 0.0,
+    WAVE_K: 0.0,
+    WAVE_A: 0.0,
+    WAVE_PTS: 0,
 
-let WAVE_LAMBDA = 10.0;
-let WAVE_K = 2 * Math.PI / WAVE_LAMBDA;
-let WAVE_A = (0.5 * WAVE_LAMBDA * 0.142) / 5; // replace the 3 with 1 to get "maxed out wave amplitude"
-let WAVE_PTS = 257;
+    init: function () {
+        this.WAVE_LAMBDA = 10.0;
+        this.WAVE_K = 2 * Math.PI / this.WAVE_LAMBDA;
+        this.WAVE_A = (0.5 * this.WAVE_LAMBDA * 0.142) / 5; // replace the 3 with 1 to get "maxed out wave amplitude"
+        this.WAVE_PTS = 257;
+    },
 
-function stokes_3rd(ka, theta) {
-    const one_ = Math.cos(theta) * (1.0 - (ka * ka) / 16.0);
-    const two_ = Math.cos(2 * theta) * 0.5 * ka;
-    const three_ = Math.cos(3 * theta) * (3.0 / 8.0) * ka * ka;
-    return one_ + two_ + three_;
-}
 
-function stokes_omega(k, a) {
-    const ka = k * a;
-    const c = (1.0 + 0.5 * ka * ka) * Math.sqrt(GRAVITY_ACC / k); // c = omega / k
-    return c / k;
-}
+    stokes_3rd: function (ka, theta) {
+        const one_ = Math.cos(theta) * (1.0 - (ka * ka) / 16.0);
+        const two_ = Math.cos(2 * theta) * 0.5 * ka;
+        const three_ = Math.cos(3 * theta) * (3.0 / 8.0) * ka * ka;
+        return one_ + two_ + three_;
+    },
 
-function perturbed_pressure(x, y, k, a, omega, t) {
-    // Express the pressure in the (x,y) plane given the pertubed sea surface by the Stokes wave.
-    // Not an exact expression but good enough for a nice looking animation.
-    // Ignore the atmospheric pressure, let it be zero for simplicity.
-    const theta = k * x - omega * t;
-    const eta = a * stokes_3rd(k * a, theta);
-    if (y >= eta) {
-        const h = y - eta;
-        const eff_h = y - eta * Math.exp(-k * h);
-        return -1 * eff_h * ATMOSPHERE_RHO * GRAVITY_ACC + PRES_SURFACE;
+    stokes_omega: function (k, a) {
+        const ka = k * a;
+        const c = (1.0 + 0.5 * ka * ka) * Math.sqrt(this.GRAVITY_ACC / k); // c = omega / k
+        return c / k;
+    },
+
+    perturbed_pressure: function (x, y, k, a, omega, t) {
+        // Express the pressure in the (x,y) plane given the pertubed sea surface by the Stokes wave.
+        // Not an exact expression but good enough for a nice looking animation.
+        // Ignore the atmospheric pressure, let it be zero for simplicity.
+        const theta = k * x - omega * t;
+        const eta = a * this.stokes_3rd(k * a, theta);
+        if (y >= eta) {
+            const h = y - eta;
+            const eff_h = y - eta * Math.exp(-k * h);
+            return -1 * eff_h * this.ATMOSPHERE_RHO * this.GRAVITY_ACC + this.PRES_SURFACE;
+        }
+        const h = eta - y;
+        const eff_h = eta * Math.exp(-k * h) - y;
+        return eff_h * this.SEAWATER_RHO * this.GRAVITY_ACC + this.PRES_SURFACE;
+    },
+
+    draw_stokes_wave: function (t, k, a, ctx, xmin, xmax, npts) {
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 0.020;
+        const omega = this.stokes_omega(k, a);
+        const ka = k * a;
+        const dx = (xmax - xmin) / (npts - 1);
+        ctx.beginPath();
+        ctx.moveTo(xmin, a * this.stokes_3rd(ka, k * xmin - omega * t));
+        for (let i = 1; i < npts; i++) {
+            const xi = xmin + dx * i;
+            ctx.lineTo(xi, a * this.stokes_3rd(ka, k * xi - omega * t));
+        }
+        ctx.stroke();
+        ctx.closePath();
     }
-    const h = eta - y;
-    const eff_h = eta * Math.exp(-k * h) - y;
-    return eff_h * SEAWATER_RHO * GRAVITY_ACC + PRES_SURFACE;
-}
 
-function draw_stokes_wave(t, k, a, ctx, xmin, xmax, npts) {
-    ctx.strokeStyle = "blue";
-    ctx.lineWidth = 0.020;
-    const omega = stokes_omega(k, a);
-    const ka = k * a;
-    const dx = (xmax - xmin) / (npts - 1);
-    ctx.beginPath();
-    ctx.moveTo(xmin, a * stokes_3rd(ka, k * xmin - omega * t));
-    for (var i = 1; i < npts; i++) {
-        const xi = xmin + dx * i;
-        ctx.lineTo(xi, a * stokes_3rd(ka, k * xi - omega * t));
-    }
-    ctx.stroke();
-    ctx.closePath();
 }
 
 //
@@ -85,7 +87,7 @@ function draw_stokes_wave(t, k, a, ctx, xmin, xmax, npts) {
 function trapezoidal_nodes_and_weights(n) {
     const x = Array(n).fill(0.0);
     const dx = 2.0 / (x.length - 1);
-    for (var i = 0; i < x.length; i++) {
+    for (let i = 0; i < x.length; i++) {
         x[i] = -1.0 + dx * i;
     }
     const w = Array(n).fill(dx);
@@ -119,7 +121,7 @@ function single_line_integral(ax, ay, bx, by, nodes, weights, pres_params) {
         const t_ = nodes[i]; // line parameter t = -1 .. +1
         const x_ = midx + t_ * tx;
         const y_ = midy + t_ * ty;
-        const p_ = perturbed_pressure(x_, y_, pres_params[0], pres_params[1], pres_params[2], pres_params[3]);
+        const p_ = BouyancyDemo.perturbed_pressure(x_, y_, pres_params[0], pres_params[1], pres_params[2], pres_params[3]);
         const w_ = weights[i];
         const xy_ = x_ * y_;
         const xx_ = x_ * x_;
@@ -135,7 +137,7 @@ function single_line_integral(ax, ay, bx, by, nodes, weights, pres_params) {
         P += wdlp_;
         PX += wdlp_ * x_;
         PY += wdlp_ * y_;
-        WL += wdl_ * (p_ > PRES_SURFACE ? 1.0 : 0.0); // wet perimeter
+        WL += wdl_ * (p_ > BouyancyDemo.PRES_SURFACE ? 1.0 : 0.0); // wet perimeter
     }
     return [A, AX, AY, AXX, AYY, L, P * nxhat, P * nyhat, PX * nyhat, PY * nxhat, WL];
 }
@@ -159,7 +161,7 @@ function ql_quadrature(qlx, qly, x1, w1, pres_params) {
     const DA = single_line_integral(qlx[3], qly[3], qlx[0], qly[0], x1, w1, pres_params);
 
     var Q = Array(AB.length).fill(0.0);
-    for (var i = 0; i < AB.length; i++) {
+    for (let i = 0; i < AB.length; i++) {
         Q[i] = AB[i] + BC[i] + CD[i] + DA[i];
     }
 
@@ -175,7 +177,7 @@ function createQuadrilateralObject() {
         qly: [-0.5, -0.5, 0.5, 0.5],
 
         // uniform density of material
-        rho: REDWOOD_RHO,
+        rho: BouyancyDemo.REDWOOD_RHO,
 
         area: 0.0, // cross section area
         perimeter: 0.0,
@@ -262,7 +264,7 @@ function createQuadrilateralObject() {
             const nu_frac = this.wet_perimeter / this.perimeter;
 
             this.vx += delta_time * (this.pres_Fx - this.vx * this.nu * nu_frac) / this.mass;
-            this.vy += delta_time * (this.pres_Fy - this.mass * GRAVITY_ACC - this.vy * this.nu * nu_frac) / this.mass;
+            this.vy += delta_time * (this.pres_Fy - this.mass * BouyancyDemo.GRAVITY_ACC - this.vy * this.nu * nu_frac) / this.mass;
             this.omegaz += delta_time * (this.pres_Tz - this.omegaz * this.nuz * nu_frac) / this.Iz;
         },
     };

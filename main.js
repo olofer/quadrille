@@ -9,8 +9,10 @@ TODO: ability to change wave amp and wavelength (with safeguards)
 
 */
 
-var floater = createQuadrilateralObject();
-floater.update_mechanics(0.0, [WAVE_K, WAVE_A, stokes_omega(WAVE_K, WAVE_A), 0.0]);
+BouyancyDemo.init()
+
+let floater = createQuadrilateralObject();
+floater.update_mechanics(0.0, [BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A, BouyancyDemo.stokes_omega(BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A), 0.0]);
 
 console.log(floater);
 console.log(floater.rho * 5 * floater.area / 12); // NOTE: should (ideally) match floater.Iz (for default quadrilateral)
@@ -33,11 +35,11 @@ function printSimulatorStats(ctx, timestamp, fpsval) {
 const DEFAULT_BBOX = [-5.0, 5.0, -3.0, 3.0];
 
 const canvas = document.getElementById("canvas");
-var PV = createDefaultPlaneView(canvas.width, canvas.height);
+let PV = createDefaultPlaneView(canvas.width, canvas.height);
 
-var viewZoom = 1.00;
-var viewEta = 0.125;
-var bbox = [DEFAULT_BBOX[0], DEFAULT_BBOX[1], DEFAULT_BBOX[2], DEFAULT_BBOX[3]];
+let viewZoom = 1.00;
+let viewEta = 0.125;
+let bbox = [DEFAULT_BBOX[0], DEFAULT_BBOX[1], DEFAULT_BBOX[2], DEFAULT_BBOX[3]];
 
 let FPS = 50.0;  // 20ms refresh intervals
 let dt = 0.0020;  // 2.0ms simulator time-stepping
@@ -47,7 +49,7 @@ const filter_beta = 0.990;
 
 let tsim = 0.0;
 let frame = 0;
-var startTime = Date.now();
+let startTime = Date.now();
 
 function resizeWindow() {
     canvas.width = window.innerWidth - 24;
@@ -73,7 +75,7 @@ function refresh() {
 
     while (elapsedSec > 0.0) {
 
-        floater.update_mechanics(tsim, [WAVE_K, WAVE_A, stokes_omega(WAVE_K, WAVE_A), tsim]);
+        floater.update_mechanics(tsim, [BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A, BouyancyDemo.stokes_omega(BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A), tsim]);
         floater.evolve(tsim, dt);
 
         tsim += dt;
@@ -87,7 +89,7 @@ function refresh() {
     PV.drawGrid(ctx);
     PV.setTransform(ctx);
 
-    draw_stokes_wave(tsim, WAVE_K, WAVE_A, ctx, PV.xmin, PV.xmax, WAVE_PTS);
+    BouyancyDemo.draw_stokes_wave(tsim, BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A, ctx, PV.xmin, PV.xmax, BouyancyDemo.WAVE_PTS);
     drawQuadrilateralObject(floater, ctx);
 
     PV.unitTransform(ctx);
@@ -119,22 +121,22 @@ function keyDownEvent(e) {
     }
 
     if (key == 'm' || key == 'M') { // swap type of wood
-        if (floater.rho == BALSA_RHO)
-            floater.rho = REDWOOD_RHO;
-        else if (floater.rho == REDWOOD_RHO)
-            floater.rho = OAK_RHO;
-        else if (floater.rho == OAK_RHO)
-            floater.rho = BALSA_RHO;
+        if (floater.rho == BouyancyDemo.BALSA_RHO)
+            floater.rho = BouyancyDemo.REDWOOD_RHO;
+        else if (floater.rho == BouyancyDemo.REDWOOD_RHO)
+            floater.rho = BouyancyDemo.OAK_RHO;
+        else if (floater.rho == BouyancyDemo.OAK_RHO)
+            floater.rho = BouyancyDemo.BALSA_RHO;
         return;
     }
 
     if (key == 'a') {
-        WAVE_A *= 0.90;
+        BouyancyDemo.WAVE_A *= 0.90;
         return;
     }
 
     if (key == 'A') {
-        WAVE_A *= 1.10;
+        BouyancyDemo.WAVE_A *= 1.10;
         return;
     }
 
