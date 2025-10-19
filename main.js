@@ -9,27 +9,24 @@ TODO: ability to change wave amp and wavelength (with safeguards)
 
 */
 
-BouyancyDemo.init()
+BouyancyDemo.init();
 
-let floater = createQuadrilateralObject(BouyancyDemo);
-floater.update_mechanics(0.0, [BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A, BouyancyDemo.stokes_omega(BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A), 0.0]);
-
-console.log(floater);
-console.log(floater.rho * 5 * floater.area / 12); // NOTE: should (ideally) match floater.Iz (for default quadrilateral)
+console.log(BouyancyDemo.floater);
+console.log(BouyancyDemo.floater.rho * 5 * BouyancyDemo.floater.area / 12); // NOTE: should (ideally) match floater.Iz (for default quadrilateral)
 
 function printSimulatorStats(ctx, timestamp, fpsval) {
     ctx.font = "17px Arial";
     ctx.fillStyle = "white";
     ctx.fillText("time: " + timestamp.toFixed(3) + " sec" + " [" + fpsval.toFixed(1) + " fps]", 5, 15);
 
-    ctx.fillText("mass: " + floater.mass.toFixed(3) +
-        " [kg], cg = (" + floater.cgx.toFixed(3) +
-        "," + floater.cgy.toFixed(3) + ")", 5, 35);
+    ctx.fillText("mass: " + BouyancyDemo.floater.mass.toFixed(3) +
+        " [kg], cg = (" + BouyancyDemo.floater.cgx.toFixed(3) +
+        "," + BouyancyDemo.floater.cgy.toFixed(3) + ")", 5, 35);
 
-    ctx.fillText("Iz[cg]: " + floater.Iz.toFixed(3) + ", area: " + floater.area.toFixed(3) + " [m^2]", 5, 55);
+    ctx.fillText("Iz[cg]: " + BouyancyDemo.floater.Iz.toFixed(3) + ", area: " + BouyancyDemo.floater.area.toFixed(3) + " [m^2]", 5, 55);
 
-    ctx.fillText("perimeter (of which wet): " + floater.perimeter.toFixed(3) +
-        " (" + floater.wet_perimeter.toFixed(3) + ") [m]", 5, 75);
+    ctx.fillText("perimeter (of which wet): " + BouyancyDemo.floater.perimeter.toFixed(3) +
+        " (" + BouyancyDemo.floater.wet_perimeter.toFixed(3) + ") [m]", 5, 75);
 }
 
 const DEFAULT_BBOX = [-5.0, 5.0, -3.0, 3.0];
@@ -41,8 +38,8 @@ let viewZoom = 1.00;
 let viewEta = 0.125;
 let bbox = [DEFAULT_BBOX[0], DEFAULT_BBOX[1], DEFAULT_BBOX[2], DEFAULT_BBOX[3]];
 
-let FPS = 50.0;  // 20ms refresh intervals
-let dt = 0.0020;  // 2.0ms simulator time-stepping
+const FPS = 50.0;  // 20ms refresh intervals
+const dt = 0.0020;  // 2.0ms simulator time-stepping
 
 let filtered_fpsval = 0.0;
 const filter_beta = 0.990;
@@ -61,6 +58,7 @@ function reset_state() {
     tsim = 0.0;
     frame = 0;
     startTime = Date.now();
+    BouyancyDemo.reset();
 }
 
 function refresh() {
@@ -69,14 +67,13 @@ function refresh() {
     let elapsedTime = currentTime - startTime;
     startTime = currentTime;
 
-    if (elapsedTime == 0.0) return;
+    if (elapsedTime <= 0.0) return;
 
     let elapsedSec = elapsedTime / 1000.0;
 
     while (elapsedSec > 0.0) {
 
-        floater.update_mechanics(tsim, [BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A, BouyancyDemo.stokes_omega(BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A), tsim]);
-        floater.evolve(tsim, dt);
+        BouyancyDemo.evolve(tsim, dt);
 
         tsim += dt;
         elapsedSec -= dt;
@@ -89,9 +86,7 @@ function refresh() {
     PV.drawGrid(ctx);
     PV.setTransform(ctx);
 
-    BouyancyDemo.draw_stokes_wave(tsim, BouyancyDemo.WAVE_K, BouyancyDemo.WAVE_A, ctx, PV.xmin, PV.xmax, BouyancyDemo.WAVE_PTS);
-    //drawQuadrilateralObject(floater, ctx);
-    floater.draw(ctx);
+    BouyancyDemo.draw(ctx, tsim, PV.xmin, PV.xmax, PV.ymin, PV.ymax);
 
     PV.unitTransform(ctx);
     filtered_fpsval = filter_beta * filtered_fpsval + (1.0 - filter_beta) * (1000.0 / elapsedTime);
@@ -122,12 +117,12 @@ function keyDownEvent(e) {
     }
 
     if (key == 'm' || key == 'M') { // swap type of wood
-        if (floater.rho == BouyancyDemo.BALSA_RHO)
-            floater.rho = BouyancyDemo.REDWOOD_RHO;
-        else if (floater.rho == BouyancyDemo.REDWOOD_RHO)
-            floater.rho = BouyancyDemo.OAK_RHO;
-        else if (floater.rho == BouyancyDemo.OAK_RHO)
-            floater.rho = BouyancyDemo.BALSA_RHO;
+        if (BouyancyDemo.floater.rho == BouyancyDemo.BALSA_RHO)
+            BouyancyDemo.floater.rho = BouyancyDemo.REDWOOD_RHO;
+        else if (BouyancyDemo.floater.rho == BouyancyDemo.REDWOOD_RHO)
+            BouyancyDemo.floater.rho = BouyancyDemo.OAK_RHO;
+        else if (BouyancyDemo.floater.rho == BouyancyDemo.OAK_RHO)
+            BouyancyDemo.floater.rho = BouyancyDemo.BALSA_RHO;
         return;
     }
 
@@ -142,22 +137,22 @@ function keyDownEvent(e) {
     }
 
     if (key == ' ' && !e.shiftKey) {
-        floater.omegaz += 2.0;
+        BouyancyDemo.floater.omegaz += 2.0;
         return;
     }
 
     if (key == ' ' && e.shiftKey) {
-        floater.omegaz -= 2.0;
+        BouyancyDemo.floater.omegaz -= 2.0;
         return;
     }
 
     if (key == '>') {
-        floater.vx += 1.0;
+        BouyancyDemo.floater.vx += 1.0;
         return;
     }
 
     if (key == '<') {
-        floater.vx -= 1.0;
+        BouyancyDemo.floater.vx -= 1.0;
         return;
     }
 

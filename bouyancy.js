@@ -89,7 +89,7 @@ function createQuadrilateralObject(demo_object) {
             const dtheta = this.omegaz * delta_time;
             const sinth = Math.sin(dtheta);
             const costh = Math.cos(dtheta);
-            for (var i = 0; i < 4; i++) {
+            for (let i = 0; i < 4; i++) {
                 const dx_ = this.qlx[i] - this.cgx;
                 const dy_ = this.qly[i] - this.cgy;
                 const x_ = costh * dx_ + sinth * dy_;
@@ -136,6 +136,8 @@ function createQuadrilateralObject(demo_object) {
 // TODO: this set of codes should be packaged in a namespace-like object & expose a set of callbacks
 //       which include, init, draw, evolve, draw_stats, handle_keypress, and such...
 
+// FIXME: missing callbacks for keydown(), and for print_stats()
+
 const BouyancyDemo = {
 
     PRES_SURFACE: 101.0e3, // arbitrary
@@ -159,9 +161,23 @@ const BouyancyDemo = {
         this.WAVE_A = (0.5 * this.WAVE_LAMBDA * 0.142) / 5; // replace the 3 with 1 to get "maxed out wave amplitude"
         this.WAVE_PTS = 257;
 
-        // TODO: create the quadrilateral object here !
+        this.floater = createQuadrilateralObject(this);
+        this.floater.update_mechanics(0.0, [this.WAVE_K, this.WAVE_A, this.stokes_omega(this.WAVE_K, this.WAVE_A), 0.0]);
     },
 
+    reset: function () {
+        // TODO: something?
+    },
+
+    evolve: function (tsim_, dt_) {
+        this.floater.update_mechanics(tsim_, [this.WAVE_K, this.WAVE_A, this.stokes_omega(this.WAVE_K, this.WAVE_A), tsim_]);
+        this.floater.evolve(tsim_, dt_);
+    },
+
+    draw: function (ctx_, tsim_, xmin_, xmax_, ymin_, ymax_) {
+        this.draw_stokes_wave(tsim_, this.WAVE_K, this.WAVE_A, ctx_, xmin_, xmax_, this.WAVE_PTS);
+        this.floater.draw(ctx_);
+    },
 
     stokes_3rd: function (ka, theta) {
         const one_ = Math.cos(theta) * (1.0 - (ka * ka) / 16.0);
