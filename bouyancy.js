@@ -133,7 +133,12 @@ function createQuadrilateralObject(demo_object) {
     return obj;
 }
 
+// TODO: ability to change the side length of the quadrilateral
+// TODO: ability to change wave amp and wavelength (with safeguards)
+
 const BouyancyDemo = {
+
+    NAME: "Bouyancy",
 
     PRES_SURFACE: 101.0e3, // arbitrary
     GRAVITY_ACC: 9.82,
@@ -151,6 +156,8 @@ const BouyancyDemo = {
     floater: null,
 
     init: function () {
+        console.log("Initializing: " + this.NAME);
+
         this.WAVE_LAMBDA = 10.0;
         this.WAVE_K = 2 * Math.PI / this.WAVE_LAMBDA;
         this.WAVE_A = (0.5 * this.WAVE_LAMBDA * 0.142) / 5; // replace the 3 with 1 to get "maxed out wave amplitude"
@@ -158,6 +165,11 @@ const BouyancyDemo = {
 
         this.floater = createQuadrilateralObject(this);
         this.floater.update_mechanics(0.0, [this.WAVE_K, this.WAVE_A, this.stokes_omega(this.WAVE_K, this.WAVE_A), 0.0]);
+
+        console.log(this.floater);
+
+        // NOTE: should (ideally) match floater.Iz (for default quadrilateral)
+        console.log(this.floater.rho * 5 * this.floater.area / 12);
     },
 
     reset: function () {

@@ -2,10 +2,7 @@
 
 Demo of the planeview.js grid plotter with an interactive animation.
 
-...
-
-TODO: ability to change the side length of the quadrilateral
-TODO: ability to change wave amp and wavelength (with safeguards)
+TODO: add "do nothing" demo object and ability to hot-swap cycle btw loaded demos
 
 Each "demo" object must have these member functions:
   init, reset, draw, evolve, print_stats, handle_key_down
@@ -13,9 +10,6 @@ Each "demo" object must have these member functions:
 */
 
 BouyancyDemo.init();
-
-console.log(BouyancyDemo.floater);
-console.log(BouyancyDemo.floater.rho * 5 * BouyancyDemo.floater.area / 12); // NOTE: should (ideally) match floater.Iz (for default quadrilateral)
 
 const DEFAULT_BBOX = [-5.0, 5.0, -3.0, 3.0];
 
