@@ -7,27 +7,15 @@ Demo of the planeview.js grid plotter with an interactive animation.
 TODO: ability to change the side length of the quadrilateral
 TODO: ability to change wave amp and wavelength (with safeguards)
 
+Each "demo" object must have these member functions:
+  init, reset, draw, evolve, print_stats, handle_key_down
+
 */
 
 BouyancyDemo.init();
 
 console.log(BouyancyDemo.floater);
 console.log(BouyancyDemo.floater.rho * 5 * BouyancyDemo.floater.area / 12); // NOTE: should (ideally) match floater.Iz (for default quadrilateral)
-
-function printSimulatorStats(ctx, timestamp, fpsval) {
-    ctx.font = "17px Arial";
-    ctx.fillStyle = "white";
-    ctx.fillText("time: " + timestamp.toFixed(3) + " sec" + " [" + fpsval.toFixed(1) + " fps]", 5, 15);
-
-    ctx.fillText("mass: " + BouyancyDemo.floater.mass.toFixed(3) +
-        " [kg], cg = (" + BouyancyDemo.floater.cgx.toFixed(3) +
-        "," + BouyancyDemo.floater.cgy.toFixed(3) + ")", 5, 35);
-
-    ctx.fillText("Iz[cg]: " + BouyancyDemo.floater.Iz.toFixed(3) + ", area: " + BouyancyDemo.floater.area.toFixed(3) + " [m^2]", 5, 55);
-
-    ctx.fillText("perimeter (of which wet): " + BouyancyDemo.floater.perimeter.toFixed(3) +
-        " (" + BouyancyDemo.floater.wet_perimeter.toFixed(3) + ") [m]", 5, 75);
-}
 
 const DEFAULT_BBOX = [-5.0, 5.0, -3.0, 3.0];
 
@@ -61,6 +49,12 @@ function reset_state() {
     BouyancyDemo.reset();
 }
 
+function printMasterStats(ctx, timestamp, fpsval) {
+    ctx.font = "17px Arial";
+    ctx.fillStyle = "white";
+    ctx.fillText("time: " + timestamp.toFixed(3) + " sec" + " [" + fpsval.toFixed(1) + " fps]", 5, 15);
+}
+
 function refresh() {
 
     let currentTime = Date.now();
@@ -90,7 +84,8 @@ function refresh() {
 
     PV.unitTransform(ctx);
     filtered_fpsval = filter_beta * filtered_fpsval + (1.0 - filter_beta) * (1000.0 / elapsedTime);
-    printSimulatorStats(ctx, tsim, filtered_fpsval);
+    printMasterStats(ctx, tsim, filtered_fpsval);
+    BouyancyDemo.print_stats(ctx, tsim);
     PV.setTransform(ctx);
 
     frame++;
@@ -116,46 +111,6 @@ function keyDownEvent(e) {
         return;
     }
 
-    if (key == 'm' || key == 'M') { // swap type of wood
-        if (BouyancyDemo.floater.rho == BouyancyDemo.BALSA_RHO)
-            BouyancyDemo.floater.rho = BouyancyDemo.REDWOOD_RHO;
-        else if (BouyancyDemo.floater.rho == BouyancyDemo.REDWOOD_RHO)
-            BouyancyDemo.floater.rho = BouyancyDemo.OAK_RHO;
-        else if (BouyancyDemo.floater.rho == BouyancyDemo.OAK_RHO)
-            BouyancyDemo.floater.rho = BouyancyDemo.BALSA_RHO;
-        return;
-    }
-
-    if (key == 'a') {
-        BouyancyDemo.WAVE_A *= 0.90;
-        return;
-    }
-
-    if (key == 'A') {
-        BouyancyDemo.WAVE_A *= 1.10;
-        return;
-    }
-
-    if (key == ' ' && !e.shiftKey) {
-        BouyancyDemo.floater.omegaz += 2.0;
-        return;
-    }
-
-    if (key == ' ' && e.shiftKey) {
-        BouyancyDemo.floater.omegaz -= 2.0;
-        return;
-    }
-
-    if (key == '>') {
-        BouyancyDemo.floater.vx += 1.0;
-        return;
-    }
-
-    if (key == '<') {
-        BouyancyDemo.floater.vx -= 1.0;
-        return;
-    }
-
     if (code == 38 && e.shiftKey) {
         viewZoom *= 0.80;
         return;
@@ -174,22 +129,31 @@ function keyDownEvent(e) {
     {
         bbox[0] += dmove;
         bbox[1] += dmove;
+        return;
     }
-    else if (code === 37) // left
+
+    if (code === 37) // left
     {
         bbox[0] -= dmove;
         bbox[1] -= dmove;
+        return;
     }
-    else if (code === 38) // up
+
+    if (code === 38) // up
     {
         bbox[2] += dmove;
         bbox[3] += dmove;
+        return;
     }
-    else if (code === 40) // down
+
+    if (code === 40) // down
     {
         bbox[2] -= dmove;
         bbox[3] -= dmove;
+        return;
     }
+
+    BouyancyDemo.handle_key_down(e);
 }
 
 function keyUpEvent(e) {

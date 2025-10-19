@@ -133,11 +133,6 @@ function createQuadrilateralObject(demo_object) {
     return obj;
 }
 
-// TODO: this set of codes should be packaged in a namespace-like object & expose a set of callbacks
-//       which include, init, draw, evolve, draw_stats, handle_keypress, and such...
-
-// FIXME: missing callbacks for keydown(), and for print_stats()
-
 const BouyancyDemo = {
 
     PRES_SURFACE: 101.0e3, // arbitrary
@@ -177,6 +172,66 @@ const BouyancyDemo = {
     draw: function (ctx_, tsim_, xmin_, xmax_, ymin_, ymax_) {
         this.draw_stokes_wave(tsim_, this.WAVE_K, this.WAVE_A, ctx_, xmin_, xmax_, this.WAVE_PTS);
         this.floater.draw(ctx_);
+    },
+
+    print_stats: function (ctx_, tsim_) {
+        ctx_.fillText(
+            "mass: " + this.floater.mass.toFixed(3) +
+            " [kg], cg = (" + this.floater.cgx.toFixed(3) +
+            "," + this.floater.cgy.toFixed(3) + ")", 5, 35);
+
+        ctx_.fillText(
+            "Iz[cg]: " + this.floater.Iz.toFixed(3) +
+            ", area: " + this.floater.area.toFixed(3) + " [m^2]", 5, 55);
+
+        ctx_.fillText(
+            "perimeter (of which wet): " + this.floater.perimeter.toFixed(3) +
+            " (" + this.floater.wet_perimeter.toFixed(3) + ") [m]", 5, 75);
+    },
+
+    handle_key_down: function (e) {
+        const code = e.keyCode;
+        const key = e.key;
+
+        if (key == 'm' || key == 'M') { // swap type of wood
+            if (this.floater.rho == this.BALSA_RHO)
+                this.floater.rho = this.REDWOOD_RHO;
+            else if (this.floater.rho == this.REDWOOD_RHO)
+                this.floater.rho = this.OAK_RHO;
+            else if (this.floater.rho == this.OAK_RHO)
+                this.floater.rho = this.BALSA_RHO;
+            return;
+        }
+
+        if (key == 'a') {
+            this.WAVE_A *= 0.90;
+            return;
+        }
+
+        if (key == 'A') {
+            this.WAVE_A *= 1.10;
+            return;
+        }
+
+        if (key == ' ' && !e.shiftKey) {
+            this.floater.omegaz += 2.0;
+            return;
+        }
+
+        if (key == ' ' && e.shiftKey) {
+            this.floater.omegaz -= 2.0;
+            return;
+        }
+
+        if (key == '>') {
+            this.floater.vx += 1.0;
+            return;
+        }
+
+        if (key == '<') {
+            this.floater.vx -= 1.0;
+            return;
+        }
     },
 
     stokes_3rd: function (ka, theta) {
