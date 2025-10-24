@@ -4,8 +4,7 @@ const GravityDemo = {
   This is a basic simulation of a set of self-attracting particles which also repel as they get too close.
 
   TODO: key press "<" and ">" to impart angular momentum around the present center of gravity of the system
-  TODO: more reliable integrator (predictor-corrector type or just explicit Heun)
-  TODO: ability to change  G strength and K strength
+
   */
 
   NAME: "Gravity",
@@ -19,6 +18,7 @@ const GravityDemo = {
   NUCONSTANT: 1.0e-3,
 
   LOGPOTENTIAL: true,
+  USE_EULER: false,
 
   X: null,
   Y: null,
@@ -37,6 +37,12 @@ const GravityDemo = {
     this.FX = new Float64Array(this.NPARTICLES);
     this.FY = new Float64Array(this.NPARTICLES);
 
+    // Temporary storage required for predict-correct integrator
+    this.VX_ = new Float64Array(this.NPARTICLES);
+    this.VY_ = new Float64Array(this.NPARTICLES);
+    this.FX_ = new Float64Array(this.NPARTICLES);
+    this.FY_ = new Float64Array(this.NPARTICLES);
+
     this.reset_particle_state();
   },
 
@@ -45,12 +51,47 @@ const GravityDemo = {
   },
 
   evolve: function (t, dt) {
+    if (this.USE_EULER) {
+      this.calc_force(t, this.X, this.Y, this.VX, this.VY, this.FX, this.FY);
+      for (var i = 0; i < this.NPARTICLES; i++) {
+        this.X[i] += dt * this.VX[i];
+        this.Y[i] += dt * this.VY[i];
+        this.VX[i] += dt * this.FX[i] / this.MCONSTANT;
+        this.VY[i] += dt * this.FY[i] / this.MCONSTANT;
+      }
+      return;
+    }
+
+    /*
+    Predictor-corrector integrator examples
+
+    * 2 evals per step (GPUSPH documentation):
+    uh = u + (dt/2) * D(u)
+    u  = u + dt * D(uh)
+       = uh - (dt/2) * D(u) + dt * D(uh)
+       = uh + dt * (D(uh) - 0.5 * D(u))
+
+    * 2 evals per step (Heuns method)
+    uf = u + dt * D(u)
+    u  = u + (dt/2) * (D(u) + D(uf)) 
+       = uf + (dt/2) * (D(uf) - D(u))
+    */
+    this.calc_force(t, this.X, this.Y, this.VX, this.VY, this.FX_, this.FY_);
+    const half_dt = dt / 2.0;
+    for (var i = 0; i < this.NPARTICLES; i++) {
+      this.VX_[i] = this.VX[i];
+      this.VY_[i] = this.VY[i];
+      this.X[i] += half_dt * this.VX[i];
+      this.Y[i] += half_dt * this.VY[i];
+      this.VX[i] += half_dt * this.FX_[i] / this.MCONSTANT;
+      this.VY[i] += half_dt * this.FY_[i] / this.MCONSTANT;
+    }
     this.calc_force(t, this.X, this.Y, this.VX, this.VY, this.FX, this.FY);
     for (var i = 0; i < this.NPARTICLES; i++) {
-      this.X[i] += dt * this.VX[i];
-      this.Y[i] += dt * this.VY[i];
-      this.VX[i] += dt * this.FX[i] / this.MCONSTANT;
-      this.VY[i] += dt * this.FY[i] / this.MCONSTANT;
+      this.X[i] += dt * (this.VX[i] - 0.5 * this.VX_[i]);
+      this.Y[i] += dt * (this.VY[i] - 0.5 * this.VY_[i]);
+      this.VX[i] += dt * (this.FX[i] - 0.5 * this.FX_[i]) / this.MCONSTANT;
+      this.VY[i] += dt * (this.FY[i] - 0.5 * this.FY_[i]) / this.MCONSTANT;
     }
   },
 
@@ -66,8 +107,12 @@ const GravityDemo = {
 
   print_stats: function (ctx, t) {
     ctx.fillText("demo: " + this.NAME, 5, 35);
-    ctx.fillText("[p] long-range force ~ " + (this.LOGPOTENTIAL ? "1/r" : "1/r/r"), 5, 55);
-    ctx.fillText("[f] fricton: " + this.NUCONSTANT.toFixed(6), 5, 75);
+    ctx.fillText("[p] long-range force ~ " + (this.LOGPOTENTIAL ? "1/r" : "1/r/r") +
+      ", [g|G] attract-strength: " + this.GCONSTANT.toFixed(4), 5, 55);
+    ctx.fillText("[f|F] friction: " + this.NUCONSTANT.toFixed(6) +
+      ", [k|K] repel-strength: " + this.KCONSTANT.toFixed(4), 5, 75);
+    ctx.fillText("[e] integrator: " + (this.USE_EULER ? "Euler" : "predict-correct") +
+      ", [d|D] disc radius: " + this.RDISC.toFixed(4), 5, 95);
   },
 
   handle_key_down: function (e) {
@@ -81,6 +126,11 @@ const GravityDemo = {
 
     if (key == 'p' || key == 'P') {
       this.LOGPOTENTIAL = !this.LOGPOTENTIAL;
+      return;
+    }
+
+    if (key == 'e' || key == 'E') {
+      this.USE_EULER = !this.USE_EULER;
       return;
     }
 
@@ -106,6 +156,26 @@ const GravityDemo = {
 
     if (key == 'F') {
       this.NUCONSTANT /= 2.0;
+      return;
+    }
+
+    if (key == 'g') {
+      this.GCONSTANT *= 1.10;
+      return;
+    }
+
+    if (key == 'G') {
+      this.GCONSTANT /= 1.10;
+      return;
+    }
+
+    if (key == 'k') {
+      this.KCONSTANT *= 1.10;
+      return;
+    }
+
+    if (key == 'K') {
+      this.KCONSTANT /= 1.10;
       return;
     }
   },
