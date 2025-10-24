@@ -1,10 +1,11 @@
 const GravityDemo = {
 
   /*
-  This is a basic simulation of a set of self-attracting particles which also repel as they get too close.
-
-  TODO: key press "<" and ">" to impart angular momentum around the present center of gravity of the system
-
+  Basic simulation of a set of self-attracting particles which also repel as they get too close.
+  The particles are drawn as discs with a changeable radius (see code).
+  Two particles repel each other if their discs overlap.
+  Two particles always attract one another regardless of distance between them.
+  It is possible to have the attractive force decay as 1/R or 1/R/R (swappable interactively)
   */
 
   NAME: "Gravity",
@@ -139,6 +140,16 @@ const GravityDemo = {
       return;
     }
 
+    if (key == '>') {
+      this.add_angular_momentum(0.05);
+      return;
+    }
+
+    if (key == '<') {
+      this.add_angular_momentum(-0.05);
+      return;
+    }
+
     if (key == 'd') {
       this.RDISC *= 1.10;
       return;
@@ -244,6 +255,25 @@ const GravityDemo = {
       this.VY[i] += (2.0 * Math.random() - 1.0) * 0.5;
       this.FX[i] = 0.0;
       this.FY[i] = 0.0;
+    }
+  },
+
+  add_angular_momentum: function (omega) {
+    var summ = 0.0;
+    var sumx = 0.0;
+    var sumy = 0.0;
+    for (var i = 0; i < this.NPARTICLES; i++) {
+      summ += this.MCONSTANT;
+      sumx += this.X[i] * this.MCONSTANT;
+      sumy += this.Y[i] * this.MCONSTANT;
+    }
+    const cgx = sumx / summ;
+    const cgy = sumy / summ;
+    for (var i = 0; i < this.NPARTICLES; i++) {
+      const rx = this.X[i] - cgx;
+      const ry = this.Y[i] - cgy;
+      this.VX[i] -= omega * ry;
+      this.VY[i] += omega * rx;
     }
   },
 
