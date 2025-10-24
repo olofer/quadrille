@@ -4,21 +4,21 @@ const GravityDemo = {
   This is a basic simulation of a set of self-attracting particles which also repel as they get too close.
 
   TODO: key press "<" and ">" to impart angular momentum around the present center of gravity of the system
-  TODO: ability to switch btw different long range potentials
-  TODO: ability to change particle disc size (affects repellation radius)
-  TODO: show basic stats
   TODO: more reliable integrator (predictor-corrector type or just explicit Heun)
+  TODO: ability to change  G strength and K strength
   */
 
   NAME: "Gravity",
 
   NPARTICLES: 30,
-  RDISC: 0.150,
+  RDISC: 0.400,
 
   GCONSTANT: 0.05,
   KCONSTANT: 20.0,
   MCONSTANT: 1.0,
-  NUCONSTANT: 1.0e-4,
+  NUCONSTANT: 1.0e-3,
+
+  LOGPOTENTIAL: true,
 
   X: null,
   Y: null,
@@ -41,7 +41,6 @@ const GravityDemo = {
   },
 
   reset: function () {
-    // console.log("reset: " + this.NAME);
     this.reset_particle_state();
   },
 
@@ -67,6 +66,8 @@ const GravityDemo = {
 
   print_stats: function (ctx, t) {
     ctx.fillText("demo: " + this.NAME, 5, 35);
+    ctx.fillText("[p] long-range force ~ " + (this.LOGPOTENTIAL ? "1/r" : "1/r/r"), 5, 55);
+    ctx.fillText("[f] fricton: " + this.NUCONSTANT.toFixed(6), 5, 75);
   },
 
   handle_key_down: function (e) {
@@ -77,10 +78,43 @@ const GravityDemo = {
       this.zero_velocity();
       return;
     }
+
+    if (key == 'p' || key == 'P') {
+      this.LOGPOTENTIAL = !this.LOGPOTENTIAL;
+      return;
+    }
+
+    if (key == 'w' || key == 'W') {
+      this.add_random_velocity();
+      return;
+    }
+
+    if (key == 'd') {
+      this.RDISC *= 1.10;
+      return;
+    }
+
+    if (key == 'D') {
+      this.RDISC /= 1.10;
+      return;
+    }
+
+    if (key == 'f') {
+      this.NUCONSTANT *= 2.0;
+      return;
+    }
+
+    if (key == 'F') {
+      this.NUCONSTANT /= 2.0;
+      return;
+    }
   },
 
   calc_force: function (t, X, Y, VX, VY, FX, FY) {
     const CONSTANT = this.GCONSTANT * this.MCONSTANT * this.MCONSTANT;
+    const EPS = 0.001;
+    const KAPPA = (EPS + this.RDISC) / (EPS + this.RDISC * this.RDISC);
+    var Fij = 0.0;
     for (var i = 0; i < this.NPARTICLES; i++) {
       FX[i] = 0.0;
       FY[i] = 0.0;
@@ -96,7 +130,10 @@ const GravityDemo = {
         const d = Math.sqrt(dsq);
         const rhatx = dx / d;
         const rhaty = dy / d;
-        const Fij = CONSTANT / (0.001 + dsq);
+        if (!this.LOGPOTENTIAL)
+          Fij = CONSTANT / (EPS + dsq);
+        else
+          Fij = CONSTANT * KAPPA / (EPS + d);
         FX[i] += Fij * rhatx;
         FY[i] += Fij * rhaty;
         if (d < 2 * this.RDISC) {
@@ -126,6 +163,15 @@ const GravityDemo = {
     for (var i = 0; i < this.NPARTICLES; i++) {
       this.VX[i] = 0.0;
       this.VY[i] = 0.0;
+      this.FX[i] = 0.0;
+      this.FY[i] = 0.0;
+    }
+  },
+
+  add_random_velocity: function () {
+    for (var i = 0; i < this.NPARTICLES; i++) {
+      this.VX[i] += (2.0 * Math.random() - 1.0) * 0.5;
+      this.VY[i] += (2.0 * Math.random() - 1.0) * 0.5;
       this.FX[i] = 0.0;
       this.FY[i] = 0.0;
     }
