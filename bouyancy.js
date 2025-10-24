@@ -173,7 +173,8 @@ const BouyancyDemo = {
     },
 
     reset: function () {
-        // TODO: something?
+        this.floater = createQuadrilateralObject(this);
+        this.floater.update_mechanics(0.0, [this.WAVE_K, this.WAVE_A, this.stokes_omega(this.WAVE_K, this.WAVE_A), 0.0]);
     },
 
     evolve: function (tsim_, dt_) {
