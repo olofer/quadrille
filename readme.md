@@ -4,7 +4,8 @@ Interactive display of a gridded 2D plane in the browser, useful for basic anima
 
 Available demo applications at this time:
 1. Bouyant quadrilateral object bopping in water waves (on-load default).
-2. A "do nothing" category.
+2. Self-gravitating system of particles which also repel when too close to one another.
+3. A "do nothing" category.
 
 Run directly online (or clone and run `index.html` locally):
 - https://raw.githack.com/olofer/quadrille/main/index.html

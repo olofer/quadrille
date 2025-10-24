@@ -2,14 +2,14 @@
 
 Demo of the planeview.js grid plotter with an interactive animation.
 
-Hot-swap which demo is executing by pressing the tab key.
+Hot-swap which demo is executing by pressing the (shift) tab key.
 
 Each "demo" object must have these member functions:
   init, reset, draw, evolve, print_stats, handle_key_down
 
 */
 
-const LIST_OF_DEMOS = [BouyancyDemo, DonothingDemo];
+const LIST_OF_DEMOS = [BouyancyDemo, GravityDemo, DonothingDemo];
 
 for (let i = 0; i < LIST_OF_DEMOS.length; i++) {
     LIST_OF_DEMOS[i].init();
@@ -96,8 +96,9 @@ function keyDownEvent(e) {
     let key = e.key;
 
     if (key == "Tab") {
-        demoIndex++;
+        if (e.shiftKey) demoIndex--; else demoIndex++;
         if (demoIndex == LIST_OF_DEMOS.length) demoIndex = 0;
+        if (demoIndex == -1) demoIndex = LIST_OF_DEMOS.length - 1;
         // reset_state();
         e.preventDefault();
         return;
