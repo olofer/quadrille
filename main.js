@@ -52,7 +52,9 @@ function reset_state() {
 function printMasterStats(ctx, timestamp, fpsval) {
     ctx.font = "17px Arial";
     ctx.fillStyle = "white";
-    ctx.fillText("time: " + timestamp.toFixed(3) + " sec" + " [" + fpsval.toFixed(1) + " fps]", 5, 15);
+    ctx.fillText("demo: " + LIST_OF_DEMOS[demoIndex].NAME +
+        " -- time: " + timestamp.toFixed(3) + " sec" +
+        " [" + fpsval.toFixed(1) + " fps]", 5, 15);
 }
 
 function refresh() {

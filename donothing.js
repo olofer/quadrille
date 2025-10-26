@@ -1,6 +1,6 @@
 const DonothingDemo = {
 
-    NAME: "Dummy",
+    NAME: "(none)",
 
     init: function () {
         console.log("Initializing: " + this.NAME);
@@ -16,7 +16,7 @@ const DonothingDemo = {
     },
 
     print_stats: function (ctx_, tsim_) {
-        ctx_.fillText("demo: " + this.NAME, 5, 35);
+        //ctx_.fillText("demo: " + this.NAME, 5, 35);
     },
 
     handle_key_down: function (e) {

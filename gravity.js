@@ -107,13 +107,13 @@ const GravityDemo = {
   },
 
   print_stats: function (ctx, t) {
-    ctx.fillText("demo: " + this.NAME, 5, 35);
+    // ctx.fillText("demo: " + this.NAME, 5, 35);
     ctx.fillText("[p] long-range force ~ " + (this.LOGPOTENTIAL ? "1/r" : "1/r/r") +
-      ", [g|G] attract-strength: " + this.GCONSTANT.toFixed(4), 5, 55);
+      ", [g|G] attract-strength: " + this.GCONSTANT.toFixed(4), 5, 35);
     ctx.fillText("[f|F] friction: " + this.NUCONSTANT.toFixed(6) +
-      ", [k|K] repel-strength: " + this.KCONSTANT.toFixed(4), 5, 75);
+      ", [k|K] repel-strength: " + this.KCONSTANT.toFixed(4), 5, 55);
     ctx.fillText("[e] integrator: " + (this.USE_EULER ? "Euler" : "predict-correct") +
-      ", [d|D] disc radius: " + this.RDISC.toFixed(4), 5, 95);
+      ", [d|D] disc radius: " + this.RDISC.toFixed(4), 5, 75);
   },
 
   handle_key_down: function (e) {
