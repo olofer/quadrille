@@ -8,4 +8,5 @@ Available demo applications at this time:
 3. A "do nothing" category.
 
 Run directly online (or clone and run `index.html` locally):
-- https://raw.githack.com/olofer/quadrille/main/index.html
+- https://olofer.github.io/quadrille/
+- alt: https://raw.githack.com/olofer/quadrille/main/index.html
