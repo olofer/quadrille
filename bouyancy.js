@@ -14,7 +14,7 @@ function createQuadrilateralObject(demo_object) {
         qly: [-0.5, -0.5, 0.5, 0.5],
 
         // uniform density of material
-        rho: demo_object.REDWOOD_RHO,
+        rho: demo_object.BALSA_RHO,
 
         area: 0.0, // cross section area
         perimeter: 0.0,
